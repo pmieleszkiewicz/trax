@@ -6,7 +6,7 @@ let traxAPI = {
         return '/api/cars'
     },
     getCarEndpoint(id) {
-        return '/api/mock-get-car' + '/' + id;
+        return `/api/cars/${id}`;
     },
     addCarEndpoint() {
         return '/api/cars';

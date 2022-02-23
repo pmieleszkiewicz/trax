@@ -14,9 +14,25 @@ use Carbon\Carbon;
 |
 */
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:api');
+Route::middleware('auth:api')->group(function () {
+    // User endpoints
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    // Cars endpoints
+    Route::prefix('cars')->as('cars.')->group(function () {
+        Route::get('', 'CarController@index')->name('index');
+        Route::post('', 'CarController@store')->name('store');
+        Route::get('{car}', 'CarController@show')->name('show');
+        Route::delete('{car}', 'CarController@delete')->name('delete');
+    });
+
+    // Trips endpoints
+    Route::prefix('trips')->as('trips.')->group(function () {
+        Route::get('', 'TripController@index')->name('index');
+    });
+});
 
 
 // Mock endpoint to get the trips for the logged in user
@@ -97,9 +113,4 @@ Route::post('mock-add-trip', function(Request $request) {
     ]);
 })->middleware('auth:api');
 
-Route::middleware(['auth:api'])->prefix('cars')->as('cars.')->group(function () {
-    Route::get('', 'CarController@index')->name('index');
-    Route::post('', 'CarController@store')->name('store');
-    Route::get('{car}', 'CarController@show')->name('show');
-    Route::delete('{car}', 'CarController@delete')->name('delete');
-});
+

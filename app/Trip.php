@@ -9,9 +9,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Trip extends Model
 {
+    protected $fillable = [
+        'took_place_at',
+        'user_id',
+        'car_id',
+        'miles',
+        'miles_balance',
+    ];
+
     protected $casts = [
-        'miles' => 'decimal:1',
-        'miles_balance' => 'decimal:1',
+        'miles' => 'float',
+        'miles_balance' => 'float',
     ];
 
     protected $dates = [

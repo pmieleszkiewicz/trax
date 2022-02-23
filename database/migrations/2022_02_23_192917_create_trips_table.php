@@ -19,11 +19,11 @@ class CreateTripsTable extends Migration
             $table->unsignedInteger('user_id');
             $table->unsignedBigInteger('car_id');
             $table->decimal('miles');
-            $table->decimal('miles_balance');
+            $table->decimal('miles_balance')->default(0);
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('car_id')->references('id')->on('cars');
+            $table->foreign('car_id')->references('id')->on('cars')->onDelete('cascade');
         });
     }
 

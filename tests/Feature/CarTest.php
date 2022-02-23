@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Car;
+use App\Trip;
 use App\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -46,7 +47,10 @@ class CarTest extends TestCase
         $response->assertJsonCount(2, 'data');
 
         $data = collect($response['data']);
-        $this->assertEquals($usersCars->pluck('id'), $data->pluck('id'));
+        $this->assertEquals(
+            $usersCars->pluck('id')->sort()->values(),
+            $data->pluck('id')->sort()->values(),
+        );
     }
 
     public function test_only_authorized_users_can_create_cars()
@@ -179,29 +183,32 @@ class CarTest extends TestCase
         $response->assertStatus(Response::HTTP_FORBIDDEN);
     }
 
-    // TODO
-//    public function test_logged_user_can_view_its_car()
-//    {
-//        // Given registered user
-//        $user = factory(User::class)->create();
-//        $car = factory(Car::class)->create([
-//            'user_id' => $user->id,
-//        ]);
-//
-//        // When I'm logged as $user and want to view my car details
-//        $this->actingAs($user, 'api');
-//        $response = $this->json(
-//            'GET',
-//            route('cars.show', ['car' => $car->id]),
-//        );
-//
-//        // Then I should get my car details with trips
-//        $response->assertStatus(Response::HTTP_OK);
-//
-//        $response->assertJsonFragment([
-//            'data' => Arr::only($car->toArray(), ['id', 'make', 'model', 'year'])
-//        ]);
-//    }
+    public function test_logged_user_can_view_its_car()
+    {
+        // Given 2 registered user with 2 trips each in one car
+        $user = factory(User::class)->create();
+        $car = factory(Car::class)->create([
+            'user_id' => $user->id,
+        ]);
+        $trips = factory(Trip::class, 2)->create(['car_id' => $car->id, 'user_id' => $user->id]);
+
+        // When I'm logged as $user and want to view my car details
+        $this->actingAs($user, 'api');
+        $response = $this->json(
+            'GET',
+            route('cars.show', ['car' => $car->id]),
+        );
+
+        // Then I should get my car details with trips
+        $response->assertStatus(Response::HTTP_OK);
+
+        $response->assertJsonFragment([
+            'data' => array_merge(
+                Arr::only($car->toArray(), ['id', 'make', 'model', 'year']),
+                ['trip_count' => 2, 'trip_miles' => round($trips->sum('miles'), 1)]
+            ),
+        ]);
+    }
 
     public function test_only_authorized_users_can_delete_cars()
     {
@@ -238,19 +245,36 @@ class CarTest extends TestCase
     {
         // Given 2 registered users
         $user = factory(User::class)->create();
-        $car = factory(Car::class)->create([
-            'user_id' => $user->id,
-        ]);
+        $deletedCar = factory(Car::class)->create(['user_id' => $user->id,]);
+        $otherCar = factory(Car::class)->create(['user_id' => $user->id]);
+
+        $firstTrip = factory(Trip::class)->create(['user_id' => $user->id, 'car_id' => $otherCar->id, 'took_place_at' => '2022-01-01', 'miles' => 10]);
+        $secondTrip = factory(Trip::class)->create(['user_id' => $user->id, 'car_id' => $deletedCar->id, 'took_place_at' => '2022-02-01', 'miles' => 10]);
+        $thirdTrip = factory(Trip::class)->create(['user_id' => $user->id, 'car_id' => $otherCar->id, 'took_place_at' => '2022-03-01', 'miles' => 10]);
 
         // When I'm logged as $user and want to delete my car
         $this->actingAs($user, 'api');
         $response = $this->json(
             'DELETE',
-            route('cars.delete', ['car' => $car->id]),
+            route('cars.delete', ['car' => $deletedCar->id]),
         );
 
         // Then car should be deleted
         $response->assertStatus(Response::HTTP_NO_CONTENT);
-        $this->assertDatabaseMissing('cars', ['id' => $car->id]);
+        $this->assertDatabaseMissing('cars', ['id' => $deletedCar->id]);
+
+        // And then older trips `miles_balance` should stay the same
+        $this->assertDatabaseHas('trips', [
+            'id' => $firstTrip->id,
+            'miles' => $firstTrip->miles,
+            'miles_balance' => $firstTrip->miles_balance,
+        ]);
+
+        // And then newer trips `miles_balance` should be decreased
+        $this->assertDatabaseHas('trips', [
+            'id' => $thirdTrip->id,
+            'miles' => $thirdTrip->miles,
+            'miles_balance' => $thirdTrip->miles_balance - $secondTrip->miles,
+        ]);
     }
 }

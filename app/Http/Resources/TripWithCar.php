@@ -20,8 +20,8 @@ class TripWithCar extends JsonResource
         return [
             'id' => $this->id,
             'date' => $this->took_place_at->format('m/d/Y'),
-            'miles' => $this->miles,
-            'total' => $this->miles_balance,
+            'miles' => (float) $this->miles,
+            'total' => (float) $this->miles_balance,
             'car' => new CarResource($this->car),
         ];
     }

@@ -20,9 +20,9 @@ class CarWithTrips extends JsonResource
             'id' => $this->id,
             'make' => $this->make,
             'model' => $this->model,
-            'year' => $this->year,
-            'trip_count' => 0, // TODO
-            'trip_miles' => 0, // TODO
+            'year' => (float) $this->year,
+            'trip_count' => (float) $this->trips_count,
+            'trip_miles' => (float) $this->trips()->sum('miles'),
         ];
     }
 }

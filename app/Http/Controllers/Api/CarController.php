@@ -6,14 +6,27 @@ namespace App\Http\Controllers\Api;
 
 use App\Car;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DeleteCarRequest;
+use App\Http\Requests\ShowCarRequest;
 use App\Http\Requests\StoreCarRequest;
 use App\Http\Resources\Car as CarResource;
 use App\Http\Resources\CarWithTrips;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class CarController extends Controller
 {
+    /**
+     * @var DatabaseManager
+     */
+    private $db;
+
+    public function __construct(DatabaseManager $db)
+    {
+        $this->db = $db;
+    }
+
     public function index(Request $request)
     {
         $cars = $request->user()->cars;
@@ -21,38 +34,51 @@ class CarController extends Controller
         return CarResource::collection($cars);
     }
 
-    public function show(Request $request, Car $car)
+    public function show(ShowCarRequest $request, Car $car)
     {
-        $user = $request->user();
-
-        if ($user->cannot('view', $car)) {
-            abort(Response::HTTP_FORBIDDEN);
-        }
+        $car->loadCount('trips');
 
         return new CarWithTrips($car);
     }
 
     public function store(StoreCarRequest $request)
     {
-        $car = $request->user()->cars()->create(
-            $request->validated()
-        );
+        $this->db->beginTransaction();
 
-        return (new CarResource($car))
-            ->response()
-            ->setStatusCode(Response::HTTP_CREATED);
+        try {
+            $car = $request->user()->cars()->create(
+                $request->validated(),
+            );
+
+            $this->db->commit();
+
+            return (new CarResource($car))
+                ->response()
+                ->setStatusCode(Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+
+            return response()->json([
+                'message' => 'Something went wrong!'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public function delete(Request $request, Car $car)
+    public function delete(DeleteCarRequest $request, Car $car)
     {
-        $user = $request->user();
+        $this->db->beginTransaction();
 
-        if ($user->cannot('delete', $car)) {
-            abort(Response::HTTP_FORBIDDEN);
+        try {
+            $car->delete();
+            $this->db->commit();
+
+            return response()->json('', Response::HTTP_NO_CONTENT);
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+
+            return response()->json([
+                'message' => 'Something went wrong!'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $car->delete();
-
-        return response()->json('', Response::HTTP_NO_CONTENT);
     }
 }

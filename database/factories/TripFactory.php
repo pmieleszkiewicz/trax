@@ -11,6 +11,6 @@ $factory->define(Trip::class, function (Faker $faker) {
     return [
         'took_place_at' => $faker->dateTimeBetween('-3 years')->format('Y-m-d'),
         'miles' => $faker->randomFloat(1, 1, 100),
-        'miles_balance' => $miles,
+        'miles_balance' => 0,
     ];
 });

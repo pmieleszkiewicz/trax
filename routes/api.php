@@ -27,39 +27,6 @@ Route::get('/user', function (Request $request) {
 ///   the API implementation
 //////////////////////////////////////////////////////////////////////////
 
-// Mock endpoint to get all cars for the logged in user
-
-Route::get('/mock-get-cars', function(Request $request) {
-    return [
-        'data' => [
-            [
-                'id' => 1,
-                'make' => 'Land Rover',
-                'model' => 'Range Rover Sport',
-                'year' => 2017
-            ],
-            [
-                'id' => 2,
-                'make' => 'Ford',
-                'model' => 'F150',
-                'year' => 2014
-            ],
-            [
-                'id' => 3,
-                'make' => 'Chevy',
-                'model' => 'Tahoe',
-                'year' => 2015
-            ],
-            [
-                'id' => 4,
-                'make' => 'Aston Martin',
-                'model' => 'Vanquish',
-                'year' => 2018
-            ]
-        ]
-    ];
-})->middleware('auth:api');
-
 
 // Mock endpoint to add a new car.
 
@@ -173,3 +140,7 @@ Route::post('mock-add-trip', function(Request $request) {
         'miles' => 'required|numeric'
     ]);
 })->middleware('auth:api');
+
+Route::middleware(['auth:api'])->prefix('cars')->group(function () {
+    Route::get('', 'CarController@index');
+});

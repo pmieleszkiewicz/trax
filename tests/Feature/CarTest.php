@@ -148,4 +148,58 @@ class CarTest extends TestCase
 
         $this->assertDatabaseCount('cars', 0);
     }
+
+    public function test_only_authorized_users_can_view_car()
+    {
+        // When I want to view a car being unauthorized/not logged in
+        $response = $this->json('GET', route('cars.show', ['car' => 1]));
+
+        // Then I should get 401 response - Unauthorized
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function test_logged_user_cannot_view_other_users_car()
+    {
+        // Given 2 registered users
+        $user = factory(User::class)->create();
+
+        $otherUser = factory(User::class)->create();
+        $car = factory(Car::class)->create([
+            'user_id' => $otherUser->id,
+        ]);
+
+        // When I'm logged as $user and want to view $otherUser's car details
+        $this->actingAs($user, 'api');
+        $response = $this->json(
+            'GET',
+            route('cars.show', ['car' => $car->id]),
+        );
+
+        // Then I should get forbidden error and data shouldn't be presented
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+    }
+
+    // TODO
+//    public function test_logged_user_can_view_its_car()
+//    {
+//        // Given registered user
+//        $user = factory(User::class)->create();
+//        $car = factory(Car::class)->create([
+//            'user_id' => $user->id,
+//        ]);
+//
+//        // When I'm logged as $user and want to view my car details
+//        $this->actingAs($user, 'api');
+//        $response = $this->json(
+//            'GET',
+//            route('cars.show', ['car' => $car->id]),
+//        );
+//
+//        // Then I should get my car details with trips
+//        $response->assertStatus(Response::HTTP_OK);
+//
+//        $response->assertJsonFragment([
+//            'data' => Arr::only($car->toArray(), ['id', 'make', 'model', 'year'])
+//        ]);
+//    }
 }

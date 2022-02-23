@@ -30,14 +30,6 @@ Route::get('/user', function (Request $request) {
 
 // Mock endpoint to add a new car.
 
-Route::post('mock-add-car', function(Request $request) {
-    $request->validate([
-        'year' => 'required|integer',
-        'make' => 'required|string',
-        'model' => 'required|string'
-    ]);
-})->middleware('auth:api');
-
 
 // Mock endpoint to get a car with the given id
 
@@ -143,5 +135,6 @@ Route::post('mock-add-trip', function(Request $request) {
 
 Route::middleware(['auth:api'])->prefix('cars')->as('cars.')->group(function () {
     Route::get('', 'CarController@index')->name('index');
+    Route::get('{car}', 'CarController@show')->name('show');
     Route::post('', 'CarController@store')->name('store');
 });

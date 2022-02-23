@@ -21,7 +21,7 @@ $factory->define(Car::class, function (Faker $faker) use ($brandsWithModels) {
     $year = $faker->numberBetween(2010, now()->year);
 
     return [
-        'brand' => Str::title($brand),
+        'make' => Str::title($brand),
         'model' => Str::title($model),
         'year' => $year,
     ];

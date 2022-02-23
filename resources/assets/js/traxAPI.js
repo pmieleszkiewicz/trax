@@ -9,7 +9,7 @@ let traxAPI = {
         return '/api/mock-get-car' + '/' + id;
     },
     addCarEndpoint() {
-        return '/api/mock-add-car';
+        return '/api/cars';
     },
     deleteCarEndpoint(id) {
         return '/api/mock-delete-car' + '/' + id;

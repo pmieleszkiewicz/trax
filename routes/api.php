@@ -141,6 +141,7 @@ Route::post('mock-add-trip', function(Request $request) {
     ]);
 })->middleware('auth:api');
 
-Route::middleware(['auth:api'])->prefix('cars')->group(function () {
-    Route::get('', 'CarController@index');
+Route::middleware(['auth:api'])->prefix('cars')->as('cars.')->group(function () {
+    Route::get('', 'CarController@index')->name('index');
+    Route::post('', 'CarController@store')->name('store');
 });

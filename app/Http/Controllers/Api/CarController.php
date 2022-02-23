@@ -42,4 +42,17 @@ class CarController extends Controller
             ->response()
             ->setStatusCode(Response::HTTP_CREATED);
     }
+
+    public function delete(Request $request, Car $car)
+    {
+        $user = $request->user();
+
+        if ($user->cannot('delete', $car)) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        $car->delete();
+
+        return response()->json('', Response::HTTP_NO_CONTENT);
+    }
 }

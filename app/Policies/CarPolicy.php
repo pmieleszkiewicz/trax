@@ -21,7 +21,7 @@ class CarPolicy
      */
     public function view(User $user, Car $car)
     {
-        return (int) $car->user_id == (int) $user->id;
+        return $this->isOwner($user, $car);
     }
 
     /**
@@ -33,6 +33,11 @@ class CarPolicy
      */
     public function delete(User $user, Car $car)
     {
-        //
+        return $this->isOwner($user, $car);
+    }
+
+    private function isOwner(User $user, Car $car): bool
+    {
+        return (int) $car->user_id == (int) $user->id;
     }
 }

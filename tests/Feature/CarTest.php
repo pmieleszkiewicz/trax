@@ -202,4 +202,55 @@ class CarTest extends TestCase
 //            'data' => Arr::only($car->toArray(), ['id', 'make', 'model', 'year'])
 //        ]);
 //    }
+
+    public function test_only_authorized_users_can_delete_cars()
+    {
+        // When I want to delete a car being unauthorized/not logged in
+        $response = $this->json('GET', route('cars.delete', ['car' => 1]));
+
+        // Then I should get 401 response - Unauthorized
+        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    }
+
+    public function test_logged_user_cannot_delete_other_users_car()
+    {
+        // Given 2 registered users
+        $user = factory(User::class)->create();
+
+        $otherUser = factory(User::class)->create();
+        $car = factory(Car::class)->create([
+            'user_id' => $otherUser->id,
+        ]);
+
+        // When I'm logged as $user and want to delete $otherUser's car
+        $this->actingAs($user, 'api');
+        $response = $this->json(
+            'DELETE',
+            route('cars.delete', ['car' => $car->id]),
+        );
+
+        // Then I should get forbidden error and car shouldn't be deleted
+        $response->assertStatus(Response::HTTP_FORBIDDEN);
+        $this->assertDatabaseHas('cars', ['id' => $car->id]);
+    }
+
+    public function test_logged_user_can_delete_its_car()
+    {
+        // Given 2 registered users
+        $user = factory(User::class)->create();
+        $car = factory(Car::class)->create([
+            'user_id' => $user->id,
+        ]);
+
+        // When I'm logged as $user and want to delete my car
+        $this->actingAs($user, 'api');
+        $response = $this->json(
+            'DELETE',
+            route('cars.delete', ['car' => $car->id]),
+        );
+
+        // Then car should be deleted
+        $response->assertStatus(Response::HTTP_NO_CONTENT);
+        $this->assertDatabaseMissing('cars', ['id' => $car->id]);
+    }
 }

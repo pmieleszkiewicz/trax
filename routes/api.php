@@ -19,42 +19,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:api');
 
 
-//////////////////////////////////////////////////////////////////////////
-/// Mock Endpoints To Be Replaced With RESTful API.
-/// - API implementation needs to return data in the format seen below.
-/// - Post data will be in the format seen below.
-/// - /resource/assets/traxAPI.js will have to be updated to align with
-///   the API implementation
-//////////////////////////////////////////////////////////////////////////
-
-
-// Mock endpoint to add a new car.
-
-
-// Mock endpoint to get a car with the given id
-
-Route::get('/mock-get-car/{id}', function(Request $request) {
-    return  [
-        'data' => [
-            'id' => 1,
-            'make' => 'Land Rover',
-            'model' => 'Range Rover Sport',
-            'year' => 2017,
-            'trip_count' => 2,
-            'trip_miles' => 18.1
-        ]
-    ];
-})->middleware('auth:api');
-
-
-// Mock endpoint to delete a car with a given id
-
-Route::delete('mock-delete-car/{id}', function(Request $request) {
-})->middleware('auth:api');
-
-
 // Mock endpoint to get the trips for the logged in user
-
 Route::get('/mock-get-trips', function(Request $request) {
     return [
         'data' => [
@@ -124,7 +89,6 @@ Route::get('/mock-get-trips', function(Request $request) {
 
 
 // Mock endpoint to add a new trip.
-
 Route::post('mock-add-trip', function(Request $request) {
     $request->validate([
         'date' => 'required|date', // ISO 8601 string
@@ -135,6 +99,7 @@ Route::post('mock-add-trip', function(Request $request) {
 
 Route::middleware(['auth:api'])->prefix('cars')->as('cars.')->group(function () {
     Route::get('', 'CarController@index')->name('index');
-    Route::get('{car}', 'CarController@show')->name('show');
     Route::post('', 'CarController@store')->name('store');
+    Route::get('{car}', 'CarController@show')->name('show');
+    Route::delete('{car}', 'CarController@delete')->name('delete');
 });

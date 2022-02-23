@@ -12,7 +12,7 @@ let traxAPI = {
         return '/api/cars';
     },
     deleteCarEndpoint(id) {
-        return '/api/mock-delete-car' + '/' + id;
+        return `/api/cars/${id}`;
     },
     getTripsEndpoint() {
         return '/api/mock-get-trips';
